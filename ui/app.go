@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/nishith/mini_projects/url_dashboard/pinger"
+	"github.com/nishithshowri006/mini_projects/url_dashboard/pinger"
 )
 
 type AppModel struct {
