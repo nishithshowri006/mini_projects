@@ -9,7 +9,7 @@ import (
 	"os/signal"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/nishith/mini_projects/url_dashboard/ui"
+	"github.com/nishithshowri006/mini_projects/url_dashboard/ui"
 )
 
 func main() {
