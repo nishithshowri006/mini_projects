@@ -14,16 +14,14 @@ import (
 )
 
 type AppModel struct {
-	table  table.Model
-	UrlMap map[string]pinger.PingResponse
-	Pinger *pinger.Pinger
+	table    table.Model
+	UrlMap   map[string]pinger.PingResponse
+	Pinger   *pinger.Pinger
+	ctx      context.Context
+	urlOrder []string
 }
 
-var (
-	tableStyle = lipgloss.NewStyle().BorderStyle(lipgloss.BlockBorder()).Foreground(lipgloss.Color("22"))
-)
-
-func NewApp(ctx context.Context, fp io.Reader, buffCount int) (*AppModel, error) {
+func NewApp(ctx context.Context, fp io.Reader, meta *pinger.URLMetadata) (*AppModel, error) {
 	columns := []table.Column{
 		{Title: "URL", Width: 60},
 		{Title: "STATUS", Width: 6},
@@ -44,25 +42,25 @@ func NewApp(ctx context.Context, fp io.Reader, buffCount int) (*AppModel, error)
 		Bold(false)
 	t.SetStyles(s)
 	m := make(map[string]pinger.PingResponse)
-	il, err := pinger.ParseConfig(fp)
-	if err != nil {
-		return nil, err
-	}
-	p := pinger.NewPinger(buffCount, time.Second*time.Duration(il.URLMetadata[0].Interval))
-	for _, url := range il.URLMetadata[0].URLs {
+	buffCount := len(meta.URLs)
+	p := pinger.NewPinger(buffCount, time.Second*time.Duration(meta.Interval))
+	order := make([]string, 0)
+	for _, url := range meta.URLs {
 		m[url] = pinger.PingResponse{}
+		order = append(order, url)
 	}
 	a := AppModel{
-		table:  t,
-		UrlMap: m,
-		Pinger: p,
+		table:    t,
+		UrlMap:   m,
+		Pinger:   p,
+		ctx:      ctx,
+		urlOrder: order,
 	}
 	return &a, nil
 }
 
 func (a *AppModel) Init() tea.Cmd {
-	ctx := context.Background()
-	go a.Pinger.StartLoop(ctx, maps.Keys(a.UrlMap))
+	go a.Pinger.StartLoop(a.ctx, maps.Keys(a.UrlMap))
 	return a.tick
 }
 
@@ -92,11 +90,15 @@ func (a *AppModel) UpdateRows(resp pinger.PingResponse) {
 	a.UrlMap[resp.URL] = resp
 	rows := make([]table.Row, len(a.UrlMap))
 	i := 0
-	for _, url := range a.UrlMap {
+	for _, u := range a.urlOrder {
+		url, ok := a.UrlMap[u]
+		if !ok {
+			continue
+		}
 		rows[i] = table.Row{
 			url.URL,
 			strconv.Itoa(url.StatusCode),
-			url.ResonseTime.Truncate(time.Millisecond).String(),
+			url.ResponseTime.Truncate(time.Millisecond).String(),
 			url.PingedAt.Format(time.DateTime),
 		}
 		i++

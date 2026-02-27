@@ -1,0 +1,5 @@
+UrlMetadata:
+  Interval: 15
+  URLs:
+    - "https://www.google.com"
+    - "https://www.facebook.com"

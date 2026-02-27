@@ -2,13 +2,13 @@ package pinger
 
 import (
 	"context"
-	"io"
+	
 	"iter"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/goccy/go-yaml"
+	
 )
 
 const TIMEOUT = 10
@@ -18,15 +18,15 @@ type URLMetadata struct {
 	URLs     []string `yaml:"URLs,omitempty"`
 }
 type IntervalList struct {
-	URLMetadata []URLMetadata `yaml:"UrlMetadata"`
+	URLMetadata URLMetadata `yaml:"UrlMetadata"`
 }
 
 type PingResponse struct {
-	StatusCode  int
-	PingedAt    time.Time
-	URL         string
-	Error       error
-	ResonseTime time.Duration
+	StatusCode   int
+	PingedAt     time.Time
+	URL          string
+	Error        error
+	ResponseTime time.Duration
 }
 
 type Pinger struct {
@@ -66,11 +66,11 @@ func (p *Pinger) ping(ctx context.Context, url string) {
 	defer resp.Body.Close()
 	e := time.Since(s)
 	p.Pings <- PingResponse{
-		URL:         url,
-		PingedAt:    time.Now(),
-		StatusCode:  resp.StatusCode,
-		Error:       nil,
-		ResonseTime: e,
+		URL:          url,
+		PingedAt:     time.Now(),
+		StatusCode:   resp.StatusCode,
+		Error:        nil,
+		ResponseTime: e,
 	}
 }
 
@@ -95,13 +95,6 @@ func (p *Pinger) StartLoop(ctx context.Context, urls iter.Seq[string]) {
 		})
 	}
 	wg.Wait()
+	close(p.Pings)
 }
 
-func ParseConfig(fp io.Reader) (*IntervalList, error) {
-	var intervals IntervalList
-	decoder := yaml.NewDecoder(fp)
-	if err := decoder.Decode(&intervals); err != nil {
-		return nil, err
-	}
-	return &intervals, nil
-}

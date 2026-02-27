@@ -1,0 +1,16 @@
+{
+  "jobs": [
+    {
+      "url": "https://www.google.com"
+    },
+    {
+      "url": "https://www.facebook.com"
+    },
+    {
+      "url": "https://www.youtube.com"
+    },
+    {
+      "url": "https://www.instagram.com"
+    }
+  ]
+}
